@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Movie {
+  id          Int      @id @default(autoincrement())
+  title       String   @unique
+  description String
+  releaseYear Int
+  genre       String
+  duration    Int
+  users       User[]   @relation()
+  ratings     Rating[]
+
+  @@map("movies")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique // usar class-validator -> email
+  password  String // validar ao cadastrar apenas    
+  movieList Movie[]  @relation()
+  ratings   Rating[]
+
+  @@map("users")
+}
+
+model Rating {
+  id      Int     @id @default(autoincrement())
+  grade   Decimal
+  userId  Int
+  movieId Int
+  user    User    @relation(fields: [userId], references: [id])
+  movie   Movie   @relation(fields: [movieId], references: [id])
+
+  @@map("rating")
+}
