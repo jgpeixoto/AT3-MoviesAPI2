@@ -9,7 +9,7 @@ datasource db {
 
 model Movie {
   id          Int      @id @default(autoincrement())
-  title       String   @unique
+  title       String
   description String
   releaseYear Int
   genre       String
