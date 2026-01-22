@@ -14,6 +14,8 @@ model Movie {
   releaseYear   Int
   genre         String
   duration      Int
+  avgRating     Decimal @default(0) @db.Decimal(3, 1)
+  totalRatings  Int @default(0)
   users         User[]   @relation("UserMovieList")
   ratings       Rating[]
 
