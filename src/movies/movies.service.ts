@@ -29,7 +29,7 @@ export class MoviesService {
       'Updating movie at id ' +
         id +
         ' with data ' +
-        JSON.stringify(updateMovieDto),
+        JSON.stringify(updateMovieDto)
     );
     return this.prisma.movie.update({ where: { id }, data: updateMovieDto });
   }
@@ -39,7 +39,7 @@ export class MoviesService {
       'Updating movie partially at id ' +
         id +
         ' with data ' +
-        JSON.stringify(updateMovieDto),
+        JSON.stringify(updateMovieDto)
     );
     return this.prisma.movie.update({ where: { id }, data: updateMovieDto });
   }
