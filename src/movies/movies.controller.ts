@@ -8,11 +8,13 @@ import {
   Delete,
   ValidationPipe,
   UsePipes,
+  Query,
   Patch,
 } from '@nestjs/common';
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
+import { FindMovieDto } from './dto/find-movie.dto';
 
 @Controller('movies')
 export class MoviesController {
@@ -24,14 +26,16 @@ export class MoviesController {
     return this.moviesService.create(createMovieDto);
   }
 
+  @UsePipes(ValidationPipe)
   @Get()
-  findAll() {
-    return this.moviesService.findAll();
+  findAll(@Query() query: FindMovieDto) {
+    return this.moviesService.findAll(query);
   }
 
+  @UsePipes(ValidationPipe)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.moviesService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.moviesService.findOne(id);
   }
 
   @UsePipes(ValidationPipe)
@@ -43,14 +47,14 @@ export class MoviesController {
   @UsePipes(ValidationPipe)
   @Patch(':id')
   updatePartial(
-    @Param('id') id: string,
-    @Body() updateMovieDto: UpdateMovieDto,
+    @Param('id') id: number,
+    @Body() updateMovieDto: UpdateMovieDto
   ) {
-    return this.moviesService.updatePartial(+id, updateMovieDto);
+    return this.moviesService.updatePartial(id, updateMovieDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.moviesService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.moviesService.remove(id);
   }
 }
