@@ -40,7 +40,7 @@ export class MoviesController {
 
   @UsePipes(ValidationPipe)
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateMovieDto: CreateMovieDto) {
+  update(@Param('id') id: number, @Body() updateMovieDto: CreateMovieDto) {
     return this.moviesService.update(+id, updateMovieDto);
   }
 
