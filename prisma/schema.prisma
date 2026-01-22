@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Movie {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  releaseYear Int
-  genre       String
-  duration    Int
-  users       User[]   @relation()
-  ratings     Rating[]
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String
+  releaseYear   Int
+  genre         String
+  duration      Int
+  users         User[]   @relation("UserMovieList")
+  ratings       Rating[]
 
   @@map("movies")
 }
@@ -25,19 +25,22 @@ model User {
   name      String
   email     String   @unique // usar class-validator -> email
   password  String // validar ao cadastrar apenas    
-  movieList Movie[]  @relation()
+  movieList Movie[]  @relation("UserMovieList")
   ratings   Rating[]
 
   @@map("users")
 }
 
 model Rating {
-  id      Int     @id @default(autoincrement())
-  grade   Decimal
-  userId  Int
-  movieId Int
-  user    User    @relation(fields: [userId], references: [id])
-  movie   Movie   @relation(fields: [movieId], references: [id])
+  id        Int      @id @default(autoincrement())
+  score     Decimal @default(0) @db.Decimal(3, 1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int
+  movieId   Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
-  @@map("rating")
+  @@unique([userId, movieId])
+  @@map("ratings")
 }
