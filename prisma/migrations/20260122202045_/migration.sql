@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "movies" ADD COLUMN     "avgRating" DECIMAL(3,1) NOT NULL DEFAULT 0,
+ADD COLUMN     "totalRatings" INTEGER NOT NULL DEFAULT 0;

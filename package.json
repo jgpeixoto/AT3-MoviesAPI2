@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "migrate": "docker-compose up -d && npx prisma migrate && docker-compose down",
+    "migrate": "docker-compose up -d && npx prisma migrate dev && docker-compose down",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
