@@ -11,16 +11,17 @@ export class MoviesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createMovieDto: CreateMovieDto) {
-    this.logger.log('Incoming movie: ' + JSON.stringify(createMovieDto));
+    this.logger.log('Creating new movie: ' + JSON.stringify(createMovieDto));
     return this.prisma.movie.create({ data: createMovieDto });
   }
 
   async findAll(findMovieDto: FindMovieDto) {
     this.logger.log(
-      'Received find all request with params + ' + JSON.stringify(findMovieDto)
+      'Received find all request with params ' + JSON.stringify(findMovieDto)
     );
-    return this.prisma.movie.findMany({
-      skip: findMovieDto.page * 10,
+    const page = +(findMovieDto.page ?? 0);
+    const movieList = await this.prisma.movie.findMany({
+      skip: page * 10,
       take: 10,
       where: {
         title: findMovieDto.title ? findMovieDto.title : undefined,
@@ -29,32 +30,55 @@ export class MoviesService {
           : undefined,
         genre: findMovieDto.genre ? findMovieDto.genre : undefined,
       },
-      orderBy: {
-        title:
-          findMovieDto.orderBy === FindMovieOrderBy.title ? 'asc' : undefined,
-        releaseYear:
-          findMovieDto.orderBy === FindMovieOrderBy.releaseYear
-            ? 'asc'
-            : undefined,
-        avgRating:
-          findMovieDto.orderBy === FindMovieOrderBy.score ? 'asc' : undefined,
-      },
+      orderBy: this.getSortingType(findMovieDto.orderBy),
     });
+    return { page: page, movies: movieList };
+  }
+
+  private getSortingType(orderBy: string): any {
+    if (!orderBy) return {};
+    switch (orderBy) {
+      case FindMovieOrderBy[FindMovieOrderBy.title]:
+        return { title: 'asc' };
+      case FindMovieOrderBy[FindMovieOrderBy.oldest]:
+        return { releaseYear: 'asc' };
+      case FindMovieOrderBy[FindMovieOrderBy.newest]:
+        return { releaseYear: 'desc' };
+      case FindMovieOrderBy[FindMovieOrderBy.lowest]:
+        return { avgRating: 'asc' };
+      case FindMovieOrderBy[FindMovieOrderBy.highest]:
+        return { avgRating: 'desc' };
+    }
   }
 
   async findOne(id: number) {
     this.logger.log('Received find one request for ID ' + id);
-    return this.prisma.movie.findUnique({ where: { id } });
+    try {
+      return await this.prisma.movie.findUnique({ where: { id } });
+    } catch (error) {
+      if (error.code == 'P2025') {
+        throw new NotFoundException(`Movie with ID ${id} not found`);
+      } else throw error;
+    }
   }
 
-  async update(id: number, updateMovieDto: CreateMovieDto) {
+  async update(id: number, createMovieDto: CreateMovieDto) {
     this.logger.log(
       'Updating movie at id ' +
         id +
         ' with data ' +
-        JSON.stringify(updateMovieDto)
+        JSON.stringify(createMovieDto)
     );
-    return this.prisma.movie.update({ where: { id }, data: updateMovieDto });
+    try {
+      return await this.prisma.movie.update({
+        where: { id },
+        data: createMovieDto,
+      });
+    } catch (error) {
+      if (error.code == 'P2025') {
+        throw new NotFoundException(`Movie with ID ${id} not found`);
+      } else throw error;
+    }
   }
 
   async updatePartial(id: number, updateMovieDto: UpdateMovieDto) {
@@ -64,16 +88,25 @@ export class MoviesService {
         ' with data ' +
         JSON.stringify(updateMovieDto)
     );
-    return this.prisma.movie.update({ where: { id }, data: updateMovieDto });
+    try {
+      return await this.prisma.movie.update({
+        where: { id },
+        data: updateMovieDto,
+      });
+    } catch (error) {
+      if (error.code == 'P2025') {
+        throw new NotFoundException(`Movie with ID ${id} not found`);
+      } else throw error;
+    }
   }
 
   async remove(id: number) {
     this.logger.log('Removing movie at id ' + id);
     try {
-      return this.prisma.movie.delete({ where: { id } });
-      // pending: ADD USER LIST DELETION AND REVIEW DELETION
+      await this.prisma.movie.delete({ where: { id } });
+      return { deletedMovieId: id };
     } catch (error) {
-      if (error.code === 'P2025') {
+      if (error.code == 'P2025') {
         throw new NotFoundException(`Movie with ID ${id} not found`);
       } else throw error;
     }
