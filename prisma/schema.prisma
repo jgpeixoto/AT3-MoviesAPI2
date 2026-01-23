@@ -1,7 +1,6 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -16,7 +15,8 @@ model Movie {
   duration      Int
   avgRating     Decimal @default(0) @db.Decimal(3, 1)
   totalRatings  Int @default(0)
-  users         User[]   @relation("UserMovieList")
+  users         User[]
+  movieList     UserMovieList[]
   ratings       Rating[]
 
   @@map("movies")
@@ -27,10 +27,21 @@ model User {
   name      String
   email     String   @unique // usar class-validator -> email
   password  String // validar ao cadastrar apenas    
-  movieList Movie[]  @relation("UserMovieList")
+  movies    Movie[]  
+  movieList UserMovieList[]
   ratings   Rating[]
 
   @@map("users")
+}
+
+model UserMovieList {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  movieId   Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
 }
 
 model Rating {
