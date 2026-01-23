@@ -34,27 +34,27 @@ export class MoviesController {
 
   @UsePipes(ValidationPipe)
   @Get(':id')
-  findOne(@Param('id') id: number) {
-    return this.moviesService.findOne(id);
+  findOne(@Param('id') id: string) {
+    return this.moviesService.findOne(+id);
   }
 
   @UsePipes(ValidationPipe)
   @Put(':id')
-  update(@Param('id') id: number, @Body() updateMovieDto: CreateMovieDto) {
+  update(@Param('id') id: string, @Body() updateMovieDto: CreateMovieDto) {
     return this.moviesService.update(+id, updateMovieDto);
   }
 
   @UsePipes(ValidationPipe)
   @Patch(':id')
   updatePartial(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updateMovieDto: UpdateMovieDto
   ) {
-    return this.moviesService.updatePartial(id, updateMovieDto);
+    return this.moviesService.updatePartial(+id, updateMovieDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number) {
-    return this.moviesService.remove(id);
+  remove(@Param('id') id: string) {
+    return this.moviesService.remove(+id);
   }
 }
