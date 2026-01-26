@@ -14,23 +14,23 @@ export class FindMovieDto {
   @Min(0)
   @IsOptional()
   @Type(() => Number)
-  page: number = 0;
+  page?: number = 0;
   @IsString()
   @IsOptional()
-  title: string;
+  title?: string;
   @IsInt()
   @Min(1800)
   @Max(new Date().getFullYear())
   @IsOptional()
   @Type(() => Number)
-  releaseYear: number;
+  releaseYear?: number;
   @IsString()
   @IsOptional()
-  genre: string;
+  genre?: string;
   @IsEnum(FindMovieOrderBy, {
     message:
       'orderBy must be one of either: title, oldest, newest, lowest, highest',
   })
   @IsOptional()
-  orderBy: string;
+  orderBy?: string;
 }
