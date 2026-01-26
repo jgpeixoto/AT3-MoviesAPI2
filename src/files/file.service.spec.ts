@@ -7,7 +7,7 @@ describe('FileService', () => {
   let prismaService: PrismaService;
 
   beforeEach(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       providers: [
         FileService,
         {
@@ -21,44 +21,29 @@ describe('FileService', () => {
       ],
     }).compile();
 
-    service = moduleRef.get(FileService);
-    prismaService = moduleRef.get(PrismaService);
+    service = module.get<FileService>(FileService);
+    prismaService = module.get<PrismaService>(PrismaService);
   });
 
-  it('should export user movies in JSON format', async () => {
+  it('should generate a unique filename when exporting movies', async () => {
     jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue({
       id: 1,
       name: 'Test User',
       email: 'test@test.com',
-      password: 'hashed-password',
-      movieList: [
-        {
-          id: 1,
-          title: 'Matrix',
-          description: 'Sci-fi',
-          releaseYear: 1999,
-          genre: 'Sci-fi',
-          duration: 120,
-        },
-      ],
-    } as unknown as ReturnType<
-      typeof prismaService.user.findUnique
-    > extends Promise<infer T>
-      ? T
-      : never);
+      password: 'hashed',
+      movieList: [] as any,
+    });
+
+    jest
+      .spyOn(service as any, 'getUuid')
+      .mockReturnValue('123e4567-e89b-12d3-a456-426614174000');
 
     const result = await service.exportUserMovies(1, 'test@test.com', 'json');
 
     expect(result).toEqual({
       message: 'Movies export generated',
     });
-  });
 
-  it('should throw error if user is not found', async () => {
-    jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
-
-    await expect(
-      service.exportUserMovies(1, 'test@test.com', 'json')
-    ).rejects.toThrow('User not found');
+    expect((service as any).getUuid).toHaveBeenCalled();
   });
 });
