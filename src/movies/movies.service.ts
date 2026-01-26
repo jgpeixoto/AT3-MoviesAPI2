@@ -35,7 +35,7 @@ export class MoviesService {
     return { page: page, movies: movieList };
   }
 
-  private getSortingType(orderBy: string): any {
+  private getSortingType(orderBy: string | undefined): any {
     if (!orderBy) return {};
     switch (orderBy) {
       case FindMovieOrderBy[FindMovieOrderBy.title]:
@@ -53,13 +53,10 @@ export class MoviesService {
 
   async findOne(id: number) {
     this.logger.log('Received find one request for ID ' + id);
-    try {
-      return await this.prisma.movie.findUnique({ where: { id } });
-    } catch (error) {
-      if (error.code == 'P2025') {
-        throw new NotFoundException(`Movie with ID ${id} not found`);
-      } else throw error;
-    }
+    const movie = await this.prisma.movie.findUnique({ where: { id } });
+    if (movie == null)
+      throw new NotFoundException(`Movie with ID ${id} not found`);
+    return movie;
   }
 
   async update(id: number, createMovieDto: CreateMovieDto) {
