@@ -1,33 +1,34 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Movie {
-  id            Int      @id @default(autoincrement())
-  title         String
-  description   String
-  releaseYear   Int
-  genre         String
-  duration      Int
-  avgRating     Decimal @default(0) @db.Decimal(3, 1)
-  totalRatings  Int @default(0)
-  users         User[]
-  movieList     UserMovieList[]
-  ratings       Rating[]
+  id           Int             @id @default(autoincrement())
+  title        String
+  description  String
+  releaseYear  Int
+  genre        String
+  duration     Int
+  avgRating    Decimal         @default(0) @db.Decimal(3, 1)
+  totalRatings Int             @default(0)
+  users        User[]
+  movieList    UserMovieList[]
+  ratings      Rating[]
 
   @@map("movies")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   name      String
-  email     String   @unique // usar class-validator -> email
-  password  String // validar ao cadastrar apenas    
-  movies    Movie[]  
+  email     String          @unique
+  password  String   
+  movies    Movie[]
   movieList UserMovieList[]
   ratings   Rating[]
 
@@ -35,18 +36,18 @@ model User {
 }
 
 model UserMovieList {
-  id        Int       @id @default(autoincrement())
-  userId    Int
-  movieId   Int
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post      Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  id      Int   @id @default(autoincrement())
+  userId  Int
+  movieId Int
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post    Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@unique([userId, movieId])
 }
 
 model Rating {
   id        Int      @id @default(autoincrement())
-  score     Decimal @default(0) @db.Decimal(3, 1)
+  score     Decimal  @default(0) @db.Decimal(3, 1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    Int
