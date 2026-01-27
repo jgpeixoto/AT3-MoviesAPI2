@@ -8,18 +8,21 @@ import {
   Delete,
   Req,
   UseGuards,
+  ValidationPipe,
+  UsePipes,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() user: User) {
+  @UsePipes(ValidationPipe)
+  create(@Body() user: CreateUserDto) {
     return this.usersService.create(user);
   }
 
@@ -34,6 +37,7 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
+  @UsePipes(ValidationPipe)
   @Patch()
   update(@Req() req, @Body() updateUserDto: UpdateUserDto) {
     const user = req.user;
