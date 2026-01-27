@@ -24,11 +24,19 @@ export class MoviesService {
       skip: page * 10,
       take: 10,
       where: {
-        title: findMovieDto.title ? findMovieDto.title : undefined,
+        title: findMovieDto.title
+          ? {
+              contains: findMovieDto.title,
+            }
+          : undefined,
         releaseYear: findMovieDto.releaseYear
           ? findMovieDto.releaseYear
           : undefined,
-        genre: findMovieDto.genre ? findMovieDto.genre : undefined,
+        genre: findMovieDto.genre
+          ? {
+              contains: findMovieDto.genre,
+            }
+          : undefined,
       },
       orderBy: this.getSortingType(findMovieDto.orderBy),
     });
