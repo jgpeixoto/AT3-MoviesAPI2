@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { AddMovieDto } from './dto/add-movie.dto';
 import { PersonalMovieList } from './interfaces/personal-movie-list.interface';
+import { MovieListMapper } from './mappers/movie-list.mapper';
 
 @Injectable()
 export class MovieListService {
@@ -54,22 +55,20 @@ export class MovieListService {
     const take = 10;
     const skip = page * take;
 
-    this.logger.log(`Fetching personal list for user ${userId} - Page ${page}`);
+    this.logger.log(`Fetching list for user ${userId} - Page ${page}`);
 
     const [items, total] = await Promise.all([
       this.prisma.userMovieList.findMany({
         where: { userId },
         skip,
         take,
-        include: {
-          post: true,
-        },
+        include: { post: true },
       }),
       this.prisma.userMovieList.count({ where: { userId } }),
     ]);
 
     return {
-      data: items.map((item) => item.post),
+      data: items.map((item) => MovieListMapper.toDto(item.post)),
       meta: {
         total,
         page,
