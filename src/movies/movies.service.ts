@@ -27,6 +27,7 @@ export class MoviesService {
         title: findMovieDto.title
           ? {
               contains: findMovieDto.title,
+              mode: 'insensitive',
             }
           : undefined,
         releaseYear: findMovieDto.releaseYear
@@ -35,6 +36,7 @@ export class MoviesService {
         genre: findMovieDto.genre
           ? {
               contains: findMovieDto.genre,
+              mode: 'insensitive',
             }
           : undefined,
       },
