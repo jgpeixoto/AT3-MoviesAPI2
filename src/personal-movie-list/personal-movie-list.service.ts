@@ -77,4 +77,20 @@ export class MovieListService {
       },
     };
   }
+  async remove(userId: number, movieId: number) {
+    this.logger.log(`Removing movie ${movieId} from user ${userId}`);
+
+    try {
+      return await this.prisma.userMovieList.delete({
+        where: {
+          userId_movieId: { userId, movieId },
+        },
+      });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new BadRequestException('Movie not found in your list');
+      }
+      throw error;
+    }
+  }
 }
