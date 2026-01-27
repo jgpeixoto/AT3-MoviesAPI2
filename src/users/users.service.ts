@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { User } from './entities/user.entity';
 import { AuthService } from 'src/auth/auth.service';
+import { CreateUserDto } from './dto/create-user.dto';
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
@@ -16,14 +16,16 @@ export class UsersService {
     private readonly authService: AuthService
   ) {}
 
-  async create(user: User) {
+  async create(CreateUserDto: CreateUserDto) {
     this.logger.log('Creating user (checking email uniqueness)');
-    const userFound = await this.findByEmail(user.email);
+    const userFound = await this.findByEmail(CreateUserDto.email);
     if (userFound !== null) {
       throw new BadRequestException('already exist a user with this email');
     }
-    user.password = await this.authService.EncryptPassword(user.password);
-    return this.prisma.user.create({ data: user });
+    CreateUserDto.password = await this.authService.EncryptPassword(
+      CreateUserDto.password
+    );
+    return this.prisma.user.create({ data: CreateUserDto });
   }
 
   async findAll() {
