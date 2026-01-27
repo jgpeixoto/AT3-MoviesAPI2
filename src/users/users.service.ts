@@ -1,29 +1,60 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from './entities/user.entity';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly authService: AuthService
+  ) {}
 
-  create(user: User) {
+  async create(user: User) {
+    const userFound = await this.findByEmail(user.email);
+    if (userFound !== null) {
+      throw new BadRequestException('already exist a user with this email');
+    }
+    user.password = await this.authService.EncryptPassword(user.password);
     return this.prisma.user.create({ data: user });
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    return this.prisma.user.findMany({});
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findByID(id: number) {
+    return this.prisma.user.findUniqueOrThrow({ where: { id } });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email: email } });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.findByID(id);
+    user.password = await this.authService.EncryptPassword(
+      updateUserDto.password
+    );
+    return this.prisma.user.update({
+      where: { id },
+      data: user,
+    });
+  }
+
+  async remove(id: number) {
+    try {
+      await this.prisma.user.delete({ where: { id } });
+      return { deletedUserID: id };
+    } catch (error) {
+      if (error.code == 'P2025') {
+        throw new NotFoundException(`Movie with ID ${id} not found`);
+      } else throw error;
+    }
   }
 }
