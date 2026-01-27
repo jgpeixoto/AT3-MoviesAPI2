@@ -18,22 +18,16 @@ export class AuthService {
     return this.service.signAsync({ id, email });
   }
 
-  async checkToken(token: string) {
+  async checkToken(token: string): Promise<any> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return this.service.verifyAsync(token.replace('Bearer ', ''));
     } catch (err) {
       throw new UnauthorizedException(err);
     }
   }
 
-  async EncryptPassword(password: string) {
-    try {
-      return bcrypt.hash(password, 10);
-    } catch (error) {
-      const errorMessage: string = error.message;
-      throw new Error(errorMessage);
-    }
+  async EncryptPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password, 10);
   }
 
   async ComparePassword(
@@ -41,7 +35,7 @@ export class AuthService {
     userPassword: string
   ): Promise<boolean> {
     try {
-      return bcrypt.compare(password, userPassword);
+      return await bcrypt.compare(password, userPassword);
     } catch (error) {
       throw new UnauthorizedException(error);
     }
@@ -58,6 +52,7 @@ export class AuthService {
       throw new UnauthorizedException('invalid credentials');
     }
     const token = await this.createToken(user.id, user.email);
-    return { user: user, token: token };
+    const { password: ocultPassword, ...safeUser } = user;
+    return { user: safeUser, token: token };
   }
 }
