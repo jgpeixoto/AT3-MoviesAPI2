@@ -52,6 +52,7 @@ export class AuthService {
       throw new UnauthorizedException('invalid credentials');
     }
     const token = await this.createToken(user.id, user.email);
-    return { user: user, token: token };
+    const { password: ocultPassword, ...safeUser } = user;
+    return { user: safeUser, token: token };
   }
 }
