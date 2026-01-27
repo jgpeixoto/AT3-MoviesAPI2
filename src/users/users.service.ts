@@ -28,7 +28,13 @@ export class UsersService {
 
   async findAll() {
     this.logger.log('Fetching all users from the database');
-    return this.prisma.user.findMany({});
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
   }
 
   async findByID(id: number) {
