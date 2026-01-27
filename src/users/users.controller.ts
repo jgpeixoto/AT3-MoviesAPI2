@@ -6,10 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -30,13 +33,17 @@ export class UsersController {
     return this.usersService.findByID(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @UseGuards(AuthGuard)
+  @Patch()
+  update(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+    const user = req.user;
+    return this.usersService.update(user.id, updateUserDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @UseGuards(AuthGuard)
+  @Delete()
+  remove(@Req() req) {
+    const user = req.user;
+    return this.usersService.remove(user.id);
   }
 }
