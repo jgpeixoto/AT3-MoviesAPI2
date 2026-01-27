@@ -29,6 +29,7 @@ export class AuthService {
       if (err instanceof JsonWebTokenError) {
         throw new UnauthorizedException('invalid token');
       }
+
       throw new UnauthorizedException('invalid token');
     }
   }
@@ -49,7 +50,7 @@ export class AuthService {
   }
 
   async authenticateUser(email: string, password: string) {
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException(`user with EMAIL: ${email} not found`);
     }
