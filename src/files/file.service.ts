@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomUUID } from 'crypto';
 
@@ -6,14 +6,18 @@ type ExportFormat = 'csv' | 'json';
 
 @Injectable()
 export class FileService {
+  private readonly logger = new Logger(FileService.name);
+
   constructor(private prisma: PrismaService) {}
 
-  async exportUserMovies(userId: number, email: string, format: ExportFormat) {
+  async exportUserMovies(
+    userId: number,
+    email: string,
+    format: ExportFormat
+  ): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        movieList: true,
-      },
+      include: { movieList: true },
     });
 
     if (!user) {
@@ -21,11 +25,11 @@ export class FileService {
     }
 
     const content = this.generateContent(user.movieList, format);
-    const filename = `movies-${randomUUID()}.${format}`;
+    const filename = this.generateFilename('movies', format);
 
-    console.log('Sending file to:', email);
-    console.log(filename);
-    console.log(content);
+    this.logger.log(
+      `Sending file "${filename}" with ${content.length} characters to ${email}`
+    );
 
     return { message: 'Movies export generated' };
   }
@@ -42,9 +46,7 @@ export class FileService {
   }
 
   private toCsv<T extends Record<string, unknown>>(data: T[]): string {
-    if (data.length === 0) {
-      return '';
-    }
+    if (!data.length) return '';
 
     const headers = Object.keys(data[0]).join(',');
 
@@ -55,5 +57,13 @@ export class FileService {
     );
 
     return [headers, ...rows].join('\n');
+  }
+
+  protected getUuid(): string {
+    return randomUUID();
+  }
+
+  private generateFilename(prefix: string, format: ExportFormat): string {
+    return `${prefix}-${this.getUuid()}.${format}`;
   }
 }

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MoviesModule } from './movies/movies.module';
 import { ConfigModule } from '@nestjs/config';
-import { FileModule } from './files/file.module';
 import { AuthModule } from './auth/auth.module';
+import { FilesModule } from './files/files.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -14,7 +14,7 @@ import { UsersModule } from './users/users.module';
     }),
     MoviesModule,
     AuthModule,
-    FileModule,
+    FilesModule,
     UsersModule,
   ],
 })
