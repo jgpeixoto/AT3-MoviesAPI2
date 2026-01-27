@@ -1,17 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Observable } from 'rxjs';
-
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
-  canActivate(
-    context: ExecutionContext
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { authorization } = context.switchToHttp().getRequest().headers;
-    return this.authService.checkToken(authorization ?? '');
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const token = this.extractTokenFromHeader(request);
+    const payload = await this.authService.checkToken(token ?? '');
+    request.user = payload;
+    return true;
+  }
+
+  private extractTokenFromHeader(request: any): string | undefined {
+    const auth =
+      request.headers['authorization'] || request.headers['Authorization'];
+    if (!auth) return undefined;
+    const [type, token] = auth.split(' ');
+    return type?.toLowerCase() === 'bearer' ? token : undefined;
   }
 }
