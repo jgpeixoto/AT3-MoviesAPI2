@@ -1,18 +1,33 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards, Logger } from '@nestjs/common';
 import { FileService } from './file.service';
 import { ExportQueryDto } from './dto/export-query.dto';
+import { AuthGuard } from '../auth/auth.guard';
+
+interface AuthenticatedRequest {
+  user: {
+    id: number;
+    email: string;
+  };
+}
 
 @Controller('files')
 export class FileController {
+  private readonly logger = new Logger(FileController.name);
+
   constructor(private readonly fileService: FileService) {}
 
-  @Get('export/movies')
+  @UseGuards(AuthGuard)
+  @Get('movies')
   async exportMovies(
+    @Req() req: AuthenticatedRequest,
     @Query() query: ExportQueryDto
-  ): Promise<{ message: string }> {
-    const userId = 1;
-    const email = 'test@test.com';
+  ) {
+    const { id, email } = req.user;
 
-    return this.fileService.exportUserMovies(userId, email, query.format);
+    this.logger.log(
+      `Export request received | userId=${id} | format=${query.format}`
+    );
+
+    return this.fileService.exportUserMovies(id, email, query.format);
   }
 }
