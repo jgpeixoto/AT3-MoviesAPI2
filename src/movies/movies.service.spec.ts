@@ -46,7 +46,7 @@ describe('MoviesService', () => {
     service = module.get<MoviesService>(MoviesService);
   });
 
-  it('Should return NotFoundException when consulting an invalid ID', async () => {
+  it('should return NotFoundException when consulting an invalid ID', async () => {
     try {
       await service.findOne(0);
     } catch (error) {
@@ -54,7 +54,7 @@ describe('MoviesService', () => {
     }
   });
 
-  it('Should return NotFoundException when performing an operation on an invalid ID', async () => {
+  it('should return NotFoundException when performing an operation on an invalid ID', async () => {
     try {
       await service.updatePartial(0, { title: 'Test' });
     } catch (error) {
@@ -67,7 +67,7 @@ describe('MoviesService', () => {
     }
   });
 
-  it('Should order movies alphabetically with query', async () => {
+  it('should order movies alphabetically with query', async () => {
     const findMovieParams = {
       orderBy: 'title',
     };
@@ -77,7 +77,7 @@ describe('MoviesService', () => {
     }
   });
 
-  it('Should order movies by oldest with query', async () => {
+  it('should order movies by oldest with query', async () => {
     const findMovieParams = {
       orderBy: 'oldest',
     };
