@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 
@@ -20,9 +21,15 @@ export class AuthService {
 
   async checkToken(token: string): Promise<any> {
     try {
-      return this.service.verifyAsync(token.replace('Bearer ', ''));
-    } catch (err) {
-      throw new UnauthorizedException(err);
+      return await this.service.verifyAsync(token.replace('Bearer ', ''));
+    } catch (err: any) {
+      if (err instanceof TokenExpiredError) {
+        throw new UnauthorizedException('token expired');
+      }
+      if (err instanceof JsonWebTokenError) {
+        throw new UnauthorizedException('invalid token');
+      }
+      throw new UnauthorizedException('invalid token');
     }
   }
 
