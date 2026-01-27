@@ -24,7 +24,7 @@ export class RatingsController {
 
   @Post()
   create(@Body() createRatingDto: CreateRatingDto, @Req() req) {
-    const userId = req.user.id;
+    const userId = Number(req.user.id);
     return this.ratingsService.rateMovie(userId, createRatingDto);
   }
 
@@ -33,7 +33,7 @@ export class RatingsController {
     @Req() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number
   ) {
-    const userId = req.user.id;
+    const userId = Number(req.user.id);
     return this.ratingsService.findAllByUser(userId, page);
   }
 
@@ -43,13 +43,13 @@ export class RatingsController {
     @Body() updateRatingDto: UpdateRatingDto,
     @Req() req
   ) {
-    const userId = req.user.id;
+    const userId = Number(req.user.id);
     return this.ratingsService.update(id, userId, updateRatingDto);
   }
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    const userId = req.user.id;
+    const userId = Number(req.user.id);
     return this.ratingsService.remove(id, userId);
   }
 }
