@@ -32,8 +32,10 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findByID(+id);
+  async findOne(@Param('id') id: string) {
+    const user = await this.usersService.findByID(+id);
+    const { password: ocultPassword, ...safeUser } = user;
+    return safeUser;
   }
 
   @UseGuards(AuthGuard)
