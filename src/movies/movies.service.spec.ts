@@ -46,12 +46,35 @@ describe('MoviesService', () => {
     service = module.get<MoviesService>(MoviesService);
   });
 
+  it('should return a movie given a valid ID', async () => {
+    const movie = await service.findOne(newIds[0]);
+    expect(movie).toBeDefined();
+    expect(movie.title).toBe(`Test Movie Title 0`);
+  });
+
   it('should return NotFoundException when consulting an invalid ID', async () => {
     try {
       await service.findOne(0);
     } catch (error) {
       expect(error).toBeInstanceOf(NotFoundException);
     }
+  });
+
+  it('should update a movie successfully given valid ID and body', async () => {
+    const body = {
+      title: 'Test Movie Updated 1',
+      genre: 'Test Genre Updated',
+      releaseYear: 2020,
+      description: 'Test Description Updated',
+      duration: 3600,
+    };
+    const movie = await service.update(newIds[1], body);
+    expect(movie).toBeDefined();
+    expect(movie.title).toBe(body.title);
+    expect(movie.genre).toBe(body.genre);
+    expect(movie.releaseYear).toBe(body.releaseYear);
+    expect(movie.description).toBe(body.description);
+    expect(movie.duration).toBe(body.duration);
   });
 
   it('should return NotFoundException when performing an operation on an invalid ID', async () => {
@@ -86,6 +109,38 @@ describe('MoviesService', () => {
       expect(movieList[i - 1].releaseYear <= movieList[i].releaseYear).toBe(
         true
       );
+    }
+  });
+
+  it('should order movies by newest with query', async () => {
+    const findMovieParams = {
+      orderBy: 'newest',
+    };
+    const movieList = (await service.findAll(findMovieParams)).movies;
+    for (let i = 1; i < movieList.length; i++) {
+      expect(movieList[i - 1].releaseYear >= movieList[i].releaseYear).toBe(
+        true
+      );
+    }
+  });
+
+  it('should order movies by highest with query', async () => {
+    const findMovieParams = {
+      orderBy: 'highest',
+    };
+    const movieList = (await service.findAll(findMovieParams)).movies;
+    for (let i = 1; i < movieList.length; i++) {
+      expect(movieList[i - 1].avgRating >= movieList[i].avgRating).toBe(true);
+    }
+  });
+
+  it('should order movies by lowest with query', async () => {
+    const findMovieParams = {
+      orderBy: 'lowest',
+    };
+    const movieList = (await service.findAll(findMovieParams)).movies;
+    for (let i = 1; i < movieList.length; i++) {
+      expect(movieList[i - 1].avgRating <= movieList[i].avgRating).toBe(true);
     }
   });
 
