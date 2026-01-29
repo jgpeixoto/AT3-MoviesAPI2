@@ -10,15 +10,14 @@ import {
   Req,
   ParseIntPipe,
   DefaultValuePipe,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { MovieListService } from './personal-movie-list.service';
 import { AddMovieDto } from './dto/add-movie.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { PersonalMovieList } from './interfaces/personal-movie-list.interface';
-
-interface RequestWithUser extends Request {
-  user: { id: number };
-}
+import { RequestWithUser } from 'src/common/request-with-user.interface';
 
 @Controller('personal-list')
 @UseGuards(AuthGuard)
@@ -26,6 +25,7 @@ export class MovieListController {
   constructor(private readonly movieListService: MovieListService) {}
 
   @Post()
+  @UsePipes(ValidationPipe)
   async add(
     @Req() req: RequestWithUser,
     @Body() addMovieDto: AddMovieDto
