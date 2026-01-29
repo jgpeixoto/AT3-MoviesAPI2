@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from 'src/auth/auth.service';
@@ -19,7 +14,7 @@ export class UsersService {
   async create(CreateUserDto: CreateUserDto) {
     this.logger.log('Creating user (checking email uniqueness)');
     const userFound = await this.findByEmail(CreateUserDto.email);
-    if (userFound !== null) {
+    if (!userFound) {
       throw new BadRequestException('already exist a user with this email');
     }
     CreateUserDto.password = await this.authService.EncryptPassword(
@@ -63,13 +58,7 @@ export class UsersService {
 
   async remove(id: number) {
     this.logger.log(`Deleting user with id: ${id}`);
-    try {
-      await this.prisma.user.delete({ where: { id } });
-      return { deletedUserID: id };
-    } catch (error) {
-      if (error.code == 'P2025') {
-        throw new NotFoundException(`Movie with ID ${id} not found`);
-      } else throw error;
-    }
+    await this.prisma.user.delete({ where: { id } });
+    return { deletedUserID: id };
   }
 }
