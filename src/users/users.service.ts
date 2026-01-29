@@ -72,11 +72,13 @@ export class UsersService {
   }
 
   async request(email: string) {
+    this.logger.log('Requesting password reset email');
     return this.authService.sendResetTokenEmail(email);
   }
 
   async forgetPassword(forgetPasswordDTO: ForgetPasswordDTO) {
     const userEmail = forgetPasswordDTO.email;
+    this.logger.log(`Changing password for email: ${userEmail}`);
     await this.authService.verifyResetJwt(forgetPasswordDTO.token, userEmail);
 
     const user = await this.findByEmail(userEmail);
