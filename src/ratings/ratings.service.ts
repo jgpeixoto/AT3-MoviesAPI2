@@ -43,8 +43,9 @@ export class RatingsService {
     });
   }
 
-  async findAllByUser(userId: number, page: number = 1, limit: number = 10) {
-    const skip = (page - 1) * limit;
+  async findAllByUser(userId: number, page: number = 0, limit: number = 10) {
+    const take = 10;
+    const skip = page * take;
 
     const [ratings, total] = await this.prisma.$transaction([
       this.prisma.rating.findMany({
@@ -62,7 +63,7 @@ export class RatingsService {
       meta: {
         total,
         page,
-        lastPage: Math.ceil(total / limit) || 1,
+        lastPage: Math.ceil(total / take) - 1,
       },
     };
   }

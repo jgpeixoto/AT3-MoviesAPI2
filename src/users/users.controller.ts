@@ -15,6 +15,7 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
+import { RequestWithUser } from 'src/common/request-with-user.interface';
 
 @Controller('users')
 export class UsersController {
@@ -39,14 +40,14 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @UsePipes(ValidationPipe)
   @Patch()
-  update(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+  update(@Req() req: RequestWithUser, @Body() updateUserDto: UpdateUserDto) {
     const user = req.user;
     return this.usersService.update(user.id, updateUserDto);
   }
 
   @UseGuards(AuthGuard)
   @Delete()
-  remove(@Req() req) {
+  remove(@Req() req: RequestWithUser) {
     const user = req.user;
     return this.usersService.remove(user.id);
   }
