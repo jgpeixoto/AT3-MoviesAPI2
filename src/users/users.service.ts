@@ -1,8 +1,14 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from 'src/auth/auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ForgetPasswordDTO } from './dto/forget-password.dto';
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
@@ -14,7 +20,7 @@ export class UsersService {
   async create(CreateUserDto: CreateUserDto) {
     this.logger.log('Creating user (checking email uniqueness)');
     const userFound = await this.findByEmail(CreateUserDto.email);
-    if (!userFound) {
+    if (userFound) {
       throw new BadRequestException('already exist a user with this email');
     }
     CreateUserDto.password = await this.authService.EncryptPassword(
@@ -36,7 +42,7 @@ export class UsersService {
 
   async findByID(id: number) {
     this.logger.log(`Fetching user by id: ${id}`);
-    return this.prisma.user.findUniqueOrThrow({ where: { id } });
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
   async findByEmail(email: string) {
@@ -47,6 +53,9 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto) {
     this.logger.log(`Updating user password for id: ${id}`);
     const user = await this.findByID(id);
+    if (!user) {
+      throw new NotFoundException('user not found exception');
+    }
     user.password = await this.authService.EncryptPassword(
       updateUserDto.password
     );
@@ -60,5 +69,28 @@ export class UsersService {
     this.logger.log(`Deleting user with id: ${id}`);
     await this.prisma.user.delete({ where: { id } });
     return { deletedUserID: id };
+  }
+
+  async request(email: string) {
+    return this.authService.sendResetTokenEmail(email);
+  }
+
+  async forgetPassword(forgetPasswordDTO: ForgetPasswordDTO) {
+    const userEmail = forgetPasswordDTO.email;
+    await this.authService.verifyResetJwt(forgetPasswordDTO.token, userEmail);
+
+    const user = await this.findByEmail(userEmail);
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+
+    const newPassword = await this.authService.EncryptPassword(
+      forgetPasswordDTO.password
+    );
+
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: newPassword },
+    });
   }
 }
