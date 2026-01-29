@@ -19,14 +19,17 @@ export class AuthService {
   ) {}
 
   async createToken(id: number, email: string): Promise<string> {
+    this.logger.log('Creating JWT token');
     return this.service.signAsync({ id, email });
   }
 
   async createResetJwt(email: string): Promise<string> {
+    this.logger.log('Creating reset JWT token');
     return this.service.signAsync({ email, purpose: 'reset' });
   }
 
   async checkToken(token: string): Promise<any> {
+    this.logger.log('Verifying JWT token');
     try {
       return await this.service.verifyAsync(token.replace('Bearer ', ''));
     } catch (err: any) {
@@ -40,6 +43,7 @@ export class AuthService {
     }
   }
   async verifyResetJwt(token: string, email: string) {
+    this.logger.log('Verifying reset JWT token');
     try {
       const payload = await this.service.verifyAsync(
         token.replace('Bearer ', '')
@@ -65,6 +69,7 @@ export class AuthService {
   }
 
   async EncryptPassword(password: string): Promise<string> {
+    this.logger.log('Encrypting password');
     return await bcrypt.hash(password, 10);
   }
 
@@ -73,6 +78,7 @@ export class AuthService {
     userPassword: string
   ): Promise<boolean> {
     try {
+      this.logger.log('Comparing passwords');
       return await bcrypt.compare(password, userPassword);
     } catch (error) {
       throw new UnauthorizedException(error);
@@ -80,6 +86,7 @@ export class AuthService {
   }
 
   async authenticateUser(email: string, password: string) {
+    this.logger.log('Authenticating user');
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException(`user with EMAIL: ${email} not found`);
@@ -95,6 +102,7 @@ export class AuthService {
   }
 
   private async createEtherealTransporter(): Promise<nodemailer.Transporter> {
+    this.logger.log('Creating Ethereal transporter');
     const host = process.env.SMTP_HOST;
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
@@ -109,6 +117,7 @@ export class AuthService {
   }
 
   async sendResetTokenEmail(email: string) {
+    this.logger.log('Sending reset email');
     const token = await this.createResetJwt(email);
     const transporter = await this.createEtherealTransporter();
 
