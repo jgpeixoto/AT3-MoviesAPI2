@@ -41,11 +41,17 @@ export class UsersService {
   }
 
   async findByID(id: number) {
+    if (!id) {
+      throw new BadRequestException('Invalid id');
+    }
     this.logger.log(`Fetching user by id: ${id}`);
     return this.prisma.user.findUnique({ where: { id } });
   }
 
   async findByEmail(email: string) {
+    if (!email) {
+      throw new BadRequestException('invalid email');
+    }
     this.logger.log(`Fetching user by email: ${email}`);
     return this.prisma.user.findUnique({ where: { email } });
   }
