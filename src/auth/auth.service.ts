@@ -57,7 +57,7 @@ export class AuthService {
         throw new UnauthorizedException('invalid token');
       }
       return payload;
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof TokenExpiredError) {
         throw new UnauthorizedException('token expired');
       }
