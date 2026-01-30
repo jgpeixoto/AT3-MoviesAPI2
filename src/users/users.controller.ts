@@ -53,13 +53,13 @@ export class UsersController {
     return this.usersService.remove(user.id);
   }
 
-  @Post('request')
+  @Post('forget')
   request(@Body() body: { email: string }) {
     return this.usersService.request(body.email);
   }
 
   @UsePipes(ValidationPipe)
-  @Patch('forget')
+  @Patch('reset')
   forgetPassword(@Body() forgetPassword: ForgetPasswordDTO) {
     return this.usersService.forgetPassword(forgetPassword);
   }
