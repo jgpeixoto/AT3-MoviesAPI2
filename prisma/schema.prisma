@@ -19,7 +19,8 @@ model Movie {
   users        User[]
   movieList    UserMovieList[]
   ratings      Rating[]
-
+  
+  @@unique([title, releaseYear])
   @@map("movies")
 }
 

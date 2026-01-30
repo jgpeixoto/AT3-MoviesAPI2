@@ -1,6 +1,8 @@
 import {
   Controller,
   Post,
+  Get,
+  Query,
   UseGuards,
   Req,
   UploadedFile,
@@ -16,14 +18,20 @@ import { RequestWithUser } from 'src/common/request-with-user.interface';
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
-  @Post('export/movies')
-  async exportMovies(@Req() req: RequestWithUser) {
-    return this.filesService.exportMovies(req.user.id, req.user.email);
+  @Get('export/movies')
+  async exportMovies(
+    @Req() req: RequestWithUser,
+    @Query('format') format: 'json' | 'csv' = 'json'
+  ) {
+    return this.filesService.exportMovies(req.user.id, req.user.email, format);
   }
 
-  @Post('export/ratings')
-  async exportRatings(@Req() req: RequestWithUser) {
-    return this.filesService.exportRatings(req.user.id, req.user.email);
+  @Get('export/ratings')
+  async exportRatings(
+    @Req() req: RequestWithUser,
+    @Query('format') format: 'json' | 'csv' = 'json'
+  ) {
+    return this.filesService.exportRatings(req.user.id, req.user.email, format);
   }
 
   @Post('import/movies')
