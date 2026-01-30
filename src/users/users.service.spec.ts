@@ -16,7 +16,11 @@ describe('UsersService', () => {
       delete: jest.Mock;
     };
   };
-  let authService: { EncryptPassword: jest.Mock };
+  let authService: {
+    EncryptPassword: jest.Mock;
+    sendResetTokenEmail: jest.Mock;
+    verifyResetJwt: jest.Mock;
+  };
 
   beforeEach(async () => {
     prisma = {
@@ -31,6 +35,8 @@ describe('UsersService', () => {
     };
     authService = {
       EncryptPassword: jest.fn(),
+      sendResetTokenEmail: jest.fn(),
+      verifyResetJwt: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -113,22 +119,27 @@ describe('UsersService', () => {
   describe('findByID', () => {
     it('should return a user by id', async () => {
       const user = { id: 1, name: 'A', email: 'a@a.com', password: 'hash' };
-      prisma.user.findUniqueOrThrow.mockResolvedValue(user);
+      prisma.user.findUnique.mockResolvedValue(user);
 
       const result = await service.findByID(1);
 
-      expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
       });
       expect(result).toEqual(user);
     });
 
-    it('should propagate errors when user is not found', async () => {
-      const error = new NotFoundException('not found');
-      prisma.user.findUniqueOrThrow.mockRejectedValue(error);
+    it('should return null when user is not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.findByID(1)).rejects.toBeInstanceOf(
-        NotFoundException
+      const result = await service.findByID(1);
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw BadRequestException when id is invalid', async () => {
+      await expect(service.findByID(0)).rejects.toBeInstanceOf(
+        BadRequestException
       );
     });
   });
@@ -144,6 +155,12 @@ describe('UsersService', () => {
         where: { email: 'a@a.com' },
       });
       expect(result).toEqual(user);
+    });
+
+    it('should throw BadRequestException when email is invalid', async () => {
+      await expect(service.findByEmail('')).rejects.toBeInstanceOf(
+        BadRequestException
+      );
     });
 
     it('should propagate errors from prisma findUnique', async () => {
@@ -162,7 +179,7 @@ describe('UsersService', () => {
         email: 'test@example.com',
         password: 'oldhash',
       };
-      prisma.user.findUniqueOrThrow.mockResolvedValue({ ...existingUser });
+      prisma.user.findUnique.mockResolvedValue({ ...existingUser });
       authService.EncryptPassword.mockResolvedValue('newhash');
       prisma.user.update.mockResolvedValue({
         ...existingUser,
@@ -171,7 +188,7 @@ describe('UsersService', () => {
 
       const result = await service.update(1, { password: 'newpass' });
 
-      expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
       });
       expect(authService.EncryptPassword).toHaveBeenCalledWith('newpass');
@@ -183,12 +200,17 @@ describe('UsersService', () => {
     });
 
     it('should propagate errors when user is not found', async () => {
-      const error = new NotFoundException('not found');
-      prisma.user.findUniqueOrThrow.mockRejectedValue(error);
+      prisma.user.findUnique.mockResolvedValue(null);
 
       await expect(
         service.update(1, { password: 'newpass' })
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('should throw BadRequestException when id is invalid', async () => {
+      await expect(
+        service.update(0, { password: 'newpass' })
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
@@ -202,11 +224,97 @@ describe('UsersService', () => {
       expect(result).toEqual({ deletedUserID: 1 });
     });
 
-    it('should throw NotFoundException when prisma returns P2025', async () => {
-      prisma.user.delete.mockRejectedValue({ code: 'P2025' });
+    it('should propagate errors from prisma delete', async () => {
+      const error = { code: 'P2025' };
+      prisma.user.delete.mockRejectedValue(error);
 
-      await expect(service.remove(999)).rejects.toBeInstanceOf(
+      await expect(service.remove(999)).rejects.toEqual(error);
+    });
+  });
+
+  describe('request', () => {
+    it('should call authService to send reset token email', async () => {
+      authService.sendResetTokenEmail.mockResolvedValue({
+        messageId: 'msg-1',
+        previewUrl: 'http://test',
+      });
+
+      const result = await service.request('test@example.com');
+
+      expect(authService.sendResetTokenEmail).toHaveBeenCalledWith(
+        'test@example.com'
+      );
+      expect(result).toEqual({
+        messageId: 'msg-1',
+        previewUrl: 'http://test',
+      });
+    });
+  });
+
+  describe('forgetPassword', () => {
+    it('should verify token, hash password, and update user', async () => {
+      const dto = {
+        email: 'test@example.com',
+        password: 'newpass',
+        token: 'Bearer token',
+      };
+      authService.verifyResetJwt.mockResolvedValue({ email: dto.email });
+      prisma.user.findUnique.mockResolvedValue({
+        id: 1,
+        name: 'User',
+        email: dto.email,
+        password: 'oldhash',
+      });
+      authService.EncryptPassword.mockResolvedValue('newhash');
+      prisma.user.update.mockResolvedValue({
+        id: 1,
+        name: 'User',
+        email: dto.email,
+        password: 'newhash',
+      });
+
+      const result = await service.forgetPassword(dto);
+
+      expect(authService.verifyResetJwt).toHaveBeenCalledWith(
+        dto.token,
+        dto.email
+      );
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { email: dto.email },
+      });
+      expect(authService.EncryptPassword).toHaveBeenCalledWith(dto.password);
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { password: 'newhash' },
+      });
+      expect(result.password).toBe('newhash');
+    });
+
+    it('should throw NotFoundException when user is not found', async () => {
+      const dto = {
+        email: 'missing@example.com',
+        password: 'newpass',
+        token: 'Bearer token',
+      };
+      authService.verifyResetJwt.mockResolvedValue({ email: dto.email });
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.forgetPassword(dto)).rejects.toBeInstanceOf(
         NotFoundException
+      );
+    });
+
+    it('should propagate errors from verifyResetJwt', async () => {
+      const dto = {
+        email: 'test@example.com',
+        password: 'newpass',
+        token: 'Bearer token',
+      };
+      const error = new Error('invalid token');
+      authService.verifyResetJwt.mockRejectedValue(error);
+
+      await expect(service.forgetPassword(dto)).rejects.toThrow(
+        'invalid token'
       );
     });
   });

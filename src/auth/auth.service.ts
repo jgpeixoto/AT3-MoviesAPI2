@@ -42,6 +42,7 @@ export class AuthService {
       throw new UnauthorizedException('invalid token');
     }
   }
+
   async verifyResetJwt(token: string, email: string) {
     this.logger.log('Verifying reset JWT token');
     try {
