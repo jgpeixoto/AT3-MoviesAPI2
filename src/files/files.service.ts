@@ -54,7 +54,7 @@ export class FilesService {
 
   async importMovies(file: Express.Multer.File, userId: number) {
     if (!file) {
-      throw new BadRequestException('file not sent');
+      throw new BadRequestException('File not sent');
     }
 
     let rawData: unknown[];

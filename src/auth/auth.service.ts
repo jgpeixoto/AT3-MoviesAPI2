@@ -34,12 +34,12 @@ export class AuthService {
       return await this.service.verifyAsync(token.replace('Bearer ', ''));
     } catch (err: any) {
       if (err instanceof TokenExpiredError) {
-        throw new UnauthorizedException('token expired');
+        throw new UnauthorizedException('Expired token');
       }
       if (err instanceof JsonWebTokenError) {
-        throw new UnauthorizedException('invalid token');
+        throw new UnauthorizedException('Invalid token');
       }
-      throw new UnauthorizedException('invalid token');
+      throw new UnauthorizedException('Invalid token');
     }
   }
 
@@ -51,21 +51,21 @@ export class AuthService {
       );
 
       if (payload.purpose !== 'reset') {
-        throw new UnauthorizedException('invalid token');
+        throw new UnauthorizedException('Invalid token');
       }
 
       if (payload.email !== email) {
-        throw new UnauthorizedException('invalid token');
+        throw new UnauthorizedException('Invalid token');
       }
       return payload;
     } catch (err) {
       if (err instanceof TokenExpiredError) {
-        throw new UnauthorizedException('token expired');
+        throw new UnauthorizedException('Expired token');
       }
       if (err instanceof JsonWebTokenError) {
-        throw new UnauthorizedException('invalid token');
+        throw new UnauthorizedException('Invalid token');
       }
-      throw new UnauthorizedException('invalid token');
+      throw new UnauthorizedException('Invalid token');
     }
   }
 
@@ -90,12 +90,14 @@ export class AuthService {
     this.logger.log('Authenticating user');
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new NotFoundException(`user with EMAIL: ${email} not found`);
+      throw new NotFoundException(
+        `User with e-mail address ${email} not found`
+      );
     }
 
     const userAproved = await this.ComparePassword(password, user.password);
     if (!userAproved) {
-      throw new UnauthorizedException('invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
     const token = await this.createToken(user.id, user.email);
     const { password: ocultPassword, ...safeUser } = user;
