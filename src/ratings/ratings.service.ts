@@ -18,7 +18,7 @@ export class RatingsService {
     });
 
     if (!movieExists) {
-      throw new NotFoundException('Movie not found.');
+      throw new NotFoundException(`Movie with ID ${dto.movieId} not found`);
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -73,11 +73,12 @@ export class RatingsService {
       where: { id: ratingId },
     });
 
-    if (!rating) throw new NotFoundException('Rating not found!');
+    if (!rating)
+      throw new NotFoundException(`Rating with ID ${ratingId} not found`);
 
     if (rating.userId !== userId) {
       throw new ForbiddenException(
-        'You are not allowed to change this rating.'
+        'You do not have permission to change this rating'
       );
     }
 
@@ -98,11 +99,12 @@ export class RatingsService {
       where: { id: ratingId },
     });
 
-    if (!rating) throw new NotFoundException('Rating not found!');
+    if (!rating)
+      throw new NotFoundException(`Rating with ID ${ratingId} not found`);
 
     if (rating.userId !== userId) {
       throw new ForbiddenException(
-        'You do not have permission to remove this rating.'
+        'You do not have permission to remove this rating'
       );
     }
     return this.prisma.$transaction(async (tx) => {
@@ -112,12 +114,12 @@ export class RatingsService {
 
       await this.updateMovieStats(rating.movieId, tx);
 
-      return { message: 'Rating removed.' };
+      return { message: 'Rating removed' };
     });
   }
 
   private async updateMovieStats(
-    movieId: number, 
+    movieId: number,
     tx: Prisma.TransactionClient | PrismaService = this.prisma
   ) {
     const aggregations = await tx.rating.aggregate({
