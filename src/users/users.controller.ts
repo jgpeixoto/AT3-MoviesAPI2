@@ -16,6 +16,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RequestWithUser } from 'src/common/request-with-user.interface';
+import { ForgetPasswordDTO } from './dto/forget-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -50,5 +51,16 @@ export class UsersController {
   remove(@Req() req: RequestWithUser) {
     const user = req.user;
     return this.usersService.remove(user.id);
+  }
+
+  @Post('request')
+  request(@Body() body: { email: string }) {
+    return this.usersService.request(body.email);
+  }
+
+  @UsePipes(ValidationPipe)
+  @Patch('forget')
+  forgetPassword(@Body() forgetPassword: ForgetPasswordDTO) {
+    return this.usersService.forgetPassword(forgetPassword);
   }
 }
