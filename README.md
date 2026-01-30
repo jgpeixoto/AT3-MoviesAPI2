@@ -735,35 +735,35 @@ Removes a rating and automatically updates the movie's statistics.
 
 # 📂 IMPORT & EXPORT
 
-This module handles the bulk processing of user data. It allows users to export their movies and ratings to **JSON** or **CSV** formats (sent via email) and import new movies into their lists.
+This module handles the bulk processing of user data. It allows authenticated users to export their movies and ratings to **JSON** or **CSV** formats (sent via email) and import new movies into their personal lists.
 
-> 🔒 **Note:** All endpoints in this section require a valid Bearer Token in the `Authorization` header.
-
----
+> 🔒 **Note:** All endpoints in this section operate per user and require a valid Bearer Token in the `Authorization` header.
 
 ### 📤 Export Movies
 **GET** `/files/export/movies`
 
 Generates a file containing the authenticated user's personal movie list and sends it via email.
+* **Behavior:** Exports only the requester's data, generates a unique filename (`movies-<uuid>`), and temporarily stores it in `EXPORT_DIR` before sending.
 
 **Query Parameters**
+
 | Parameter | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `format` | string | No | Output format: `json` or `csv` (Default: `json`) |
 
 **Responses**
+
 | Code | Description |
 | :--- | :--- |
 | `200` | Process started (File sent to email) |
 
 **Response Example**
-```json
-{
-  "file": "movies-abc123.json",
-  "sentTo": "user@email.com",
-  "format": "json"
-}
-```
+
+    {
+      "file": "movies-abc123.json",
+      "sentTo": "user@email.com",
+      "format": "json"
+    }
 
 ---
 
@@ -771,40 +771,49 @@ Generates a file containing the authenticated user's personal movie list and sen
 **GET** `/files/export/ratings`
 
 Generates a file containing all ratings created by the authenticated user and sends it via email.
+* **Behavior:** Each rating export includes `movieTitle`, `score`, and `updatedAt`.
 
 **Query Parameters**
+
 | Parameter | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `format` | string | No | Output format: `json` or `csv` (Default: `json`) |
 
 **Responses**
+
 | Code | Description |
 | :--- | :--- |
 | `200` | Process started (File sent to email) |
 
 **Response Example**
-```json
-{
-  "file": "ratings-abc456.csv",
-  "sentTo": "user@email.com",
-  "format": "csv"
-}
-```
+
+    {
+      "file": "ratings-abc456.csv",
+      "sentTo": "user@email.com",
+      "format": "csv"
+    }
 
 ---
 
 ### 📥 Import Movies
 **POST** `/files/import/movies`
 
-Imports movies from a file into the authenticated user's personal list. The system validates the data and prevents duplicate associations.
+Imports movies from a file into the authenticated user's personal list.
 
-**Request Body (Multipart/Form-Data)**
+* **Behavior:**
+    * Accepts JSON or CSV files via `multipart/form-data`.
+    * Validates data using `class-validator` (DTOs).
+    * Inserts new movies or associates existing ones.
+    * **Idempotency:** Prevents duplicate associations for the same user.
+
+**Request Body**
+
 | Key | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `file` | file | **Yes** | A valid `.json` or `.csv` file |
 
 **Data Validation (DTO)**
-The imported file must contain the following fields:
+The imported file must contain the following fields per item:
 * `title` (string)
 * `description` (string)
 * `releaseYear` (number: 1800 - Current)
@@ -812,21 +821,50 @@ The imported file must contain the following fields:
 * `genre` (string)
 
 **Responses**
+
 | Code | Description |
 | :--- | :--- |
 | `201` | Import successful |
 | `400` | Validation failed or Invalid file format |
 
 **Response Example**
-```json
-{
-  "imported": 5
-}
-```
+
+    {
+      "imported": 5
+    }
 
 ---
 
-###
+### ⚙️ Environment Variables
+
+To ensure email delivery and file storage work correctly, configure these in `.env`:
+
+| Variable | Description | Example |
+| :--- | :--- | :--- |
+| `EXPORT_DIR` | Temporary storage for generated files | `tmp/exports` |
+| `SMTP_HOST` | Email provider host | `smtp.provider.com` |
+| `SMTP_PORT` | Email provider port | `587` |
+| `SMTP_USER` | SMTP Username | `user@email.com` |
+| `SMTP_PASS` | SMTP Password | `password` |
+
+---
+
+### 🏗️ Architecture & Specs
+
+**Folder Structure**
+
+    src/files/
+     ├── dto/              # ImportMovieDto, ExportMovieDto, ExportRatingDto
+     ├── mappers/          # MovieListMapper & RatingMapper
+     ├── files.controller.ts
+     ├── files.service.ts
+     ├── files.module.ts
+     └── files.service.spec.ts
+
+**Testing**
+* Unit tests cover `FilesService`.
+* External dependencies (`Prisma`, `Nodemailer`) are mocked.
+* Compatible with Docker-based environments.
 
 ---
 <br> </br>
