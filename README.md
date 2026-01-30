@@ -156,7 +156,80 @@ Retrieves a specific user by their ID.
   "password": "$2b$10$UykW6VaTwjhJB1x9nEvlI.EklKVSxl0PCli/A1N/hnYLjXNmP.IO."
 }
 ```
+---
+### ❓ Forgot Password
+**POST** `/users/forget`
 
+Initiates the password recovery process by sending an email containing the reset instructions. In the development environment, it returns the link to the mocked email (Ethereal).
+
+**Request Body**
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | **Yes** | User registered email address |
+
+**Responses**
+
+| Code | Description |
+| :--- | :--- |
+| `201` | Recovery email sent successfully |
+| `404` | Email not found |
+
+**Request Example**
+
+```json
+{
+  "email": "user@email.com"
+}
+```
+
+**Response Example**
+
+```json
+{
+  "messageId": "<e9892df5-e583-8ff4-184b-1525aee1260c@movies.com>",
+  "previewUrl": "[https://ethereal.email/message/aXu0J4Fu3sRn3E5KaXzjjJSkaEEGR6](https://ethereal.email/message/aXu0J4Fu3sRn3E5KaXzjjJSkaEEGR6)..."
+}
+```
+
+---
+### 🔄 Reset Password
+**PATCH** `/users/reset`
+
+Resets the user's password using a valid recovery token. This endpoint verifies if the provided token matches the email and validates the signature before updating the password.
+
+**Request Body**
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | **Yes** | User email address |
+| `token` | string | **Yes** | Valid JWT recovery token |
+| `password` | string | **Yes** | New password |
+
+**Responses**
+| Code | Description |
+| :--- | :--- |
+| `200` | Password changed successfully (Returns updated user) |
+| `400` | Invalid Token, Expired Token or Email mismatch |
+
+**Request Example**
+```json
+{
+  "email": "user@email.com",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "password": "newPassword123"
+}
+```
+
+**Response Example**
+
+```json
+{
+  "id": 1,
+  "name": "Example User",
+  "email": "user@email.com",
+  "password": "$2b$10$NewHash..."
+}
+```
 ---
 
 ### 🔒 Update User
@@ -455,7 +528,7 @@ Retrieves all movies added by the authenticated user with full details and pagin
 **Query Parameters**
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| `page` | number | Page number (starts at 0) |
+| `page` | number | Optional. The page number to retrieve (starts at 0). Example: /personal-list?page=1  |
 
 **Responses**
 | Code | Description |
@@ -662,8 +735,98 @@ Removes a rating and automatically updates the movie's statistics.
 
 # 📂 IMPORT & EXPORT
 
+This module handles the bulk processing of user data. It allows users to export their movies and ratings to **JSON** or **CSV** formats (sent via email) and import new movies into their lists.
 
-/////////////////////////////////////////////////////////////
+> 🔒 **Note:** All endpoints in this section require a valid Bearer Token in the `Authorization` header.
+
+---
+
+### 📤 Export Movies
+**GET** `/files/export/movies`
+
+Generates a file containing the authenticated user's personal movie list and sends it via email.
+
+**Query Parameters**
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `format` | string | No | Output format: `json` or `csv` (Default: `json`) |
+
+**Responses**
+| Code | Description |
+| :--- | :--- |
+| `200` | Process started (File sent to email) |
+
+**Response Example**
+```json
+{
+  "file": "movies-abc123.json",
+  "sentTo": "user@email.com",
+  "format": "json"
+}
+```
+
+---
+
+### 📤 Export Ratings
+**GET** `/files/export/ratings`
+
+Generates a file containing all ratings created by the authenticated user and sends it via email.
+
+**Query Parameters**
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `format` | string | No | Output format: `json` or `csv` (Default: `json`) |
+
+**Responses**
+| Code | Description |
+| :--- | :--- |
+| `200` | Process started (File sent to email) |
+
+**Response Example**
+```json
+{
+  "file": "ratings-abc456.csv",
+  "sentTo": "user@email.com",
+  "format": "csv"
+}
+```
+
+---
+
+### 📥 Import Movies
+**POST** `/files/import/movies`
+
+Imports movies from a file into the authenticated user's personal list. The system validates the data and prevents duplicate associations.
+
+**Request Body (Multipart/Form-Data)**
+| Key | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `file` | file | **Yes** | A valid `.json` or `.csv` file |
+
+**Data Validation (DTO)**
+The imported file must contain the following fields:
+* `title` (string)
+* `description` (string)
+* `releaseYear` (number: 1800 - Current)
+* `duration` (integer)
+* `genre` (string)
+
+**Responses**
+| Code | Description |
+| :--- | :--- |
+| `201` | Import successful |
+| `400` | Validation failed or Invalid file format |
+
+**Response Example**
+```json
+{
+  "imported": 5
+}
+```
+
+---
+
+###
 
 ---
 <br> </br>
