@@ -7,7 +7,7 @@ Developed with **TypeScript** and a robust **SQL** database, the architecture ad
 > This repository was as a learning experience within the internship
 > "Back-end Journey (Node.js) - AWS Cloud Context" at Compass UOL,
 > by the interns listed in the Authors section of this README.
-<br> </br>
+
 # 📋 Table of Contents
 * [Features](#-features)
 * [Getting Started](#-getting-started)
