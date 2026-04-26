@@ -4,7 +4,7 @@ A scalable RESTful API built with NestJS to manage movie catalogs and user inter
 
 Developed with **TypeScript** and a robust **SQL** database, the architecture adheres strictly to **Clean Code** to ensure maintainability and scalability.
 
-> This repository was as a learning experience within the internship
+> This repository was made as a learning experience within the internship
 > "Back-end Journey (Node.js) - AWS Cloud Context" at Compass UOL,
 > by the interns listed in the Authors section of this README.
 
